@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================
+  请假审批流程
+  ============================================================
+  流程走向：
+    start
+      ↓
+    applyTask        申请人提交 / 修改（assignee = ${applicant}）
+      ↓
+    deptLeaderTask   主管审批  （assignee = ${deptLeader}）
+      ↓
+    daysGateway      排他网关：请假天数 > 3 天？
+      ├─ 是 → directorTask 总监审批（assignee = ${director}） → hrTask
+      └─ 否 → hrTask        HR 备案（assignee = ${hr}）      → end
+      ↓
+    end
+
+  驳回怎么走：
+    不是流程里的连线，而是调用 RuntimeService.changeActivityStateBuilder()
+    把当前活动节点"跳回" applyTask（见 LeaveService.reject 方法）。
+    这样申请人改完可以再次提交，历史记录也留着。
+
+  变量（启动流程时传入）：
+    applicant / deptLeader / director / hr / days / reason
+  ============================================================
+-->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             targetNamespace="http://demo.com/leave">
+
+    <process id="leaveProcess" name="请假审批流程" isExecutable="true">
+
+        <startEvent id="start" name="发起"/>
+
+        <sequenceFlow id="flow1" sourceRef="start" targetRef="applyTask"/>
+
+        <!-- 申请人：提交/修改。启动后由 LeaveService 立即 complete 一次，推进到主管 -->
+        <userTask id="applyTask" name="申请人提交"
+                  flowable:assignee="${applicant}"/>
+        <sequenceFlow id="flow2" sourceRef="applyTask" targetRef="deptLeaderTask"/>
+
+        <!-- 一级审批：直属主管 -->
+        <userTask id="deptLeaderTask" name="主管审批"
+                  flowable:assignee="${deptLeader}"/>
+        <sequenceFlow id="flow3" sourceRef="deptLeaderTask" targetRef="daysGateway"/>
+
+        <!-- 排他网关：按天数分流 -->
+        <exclusiveGateway id="daysGateway" name="请假天数 > 3 ?"/>
+
+        <sequenceFlow id="flow4" name="大于3天" sourceRef="daysGateway" targetRef="directorTask">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${days > 3}]]></conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="flow5" name="3天以内" sourceRef="daysGateway" targetRef="hrTask">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${days <= 3}]]></conditionExpression>
+        </sequenceFlow>
+
+        <!-- 二级审批：总监（仅 >3 天） -->
+        <userTask id="directorTask" name="总监审批"
+                  flowable:assignee="${director}"/>
+        <sequenceFlow id="flow6" sourceRef="directorTask" targetRef="hrTask"/>
+
+        <!-- 归档：HR 备案 -->
+        <userTask id="hrTask" name="HR 备案"
+                  flowable:assignee="${hr}"/>
+        <sequenceFlow id="flow7" sourceRef="hrTask" targetRef="end"/>
+
+        <endEvent id="end" name="结束"/>
+
+    </process>
+</definitions>

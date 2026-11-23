@@ -1,0 +1,41 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: flowable-leave-demo
+
+  datasource:
+    # 关键：不要加 MODE=MySQL，也不要加 DATABASE_TO_LOWER=TRUE。
+    # 前者会让 Flowable 自带的 H2 建表脚本报语法错误；
+    # 后者会让引擎判断"表是否已存在"时大小写不匹配，重复建表报 already exists。
+    url: jdbc:h2:mem:leave;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    # Spring Boot 3 里 schema.sql 需要显式开启
+    sql:
+      init:
+        mode: always
+        schema-locations: classpath:schema.sql
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# ---------------- Flowable 配置（前缀是 flowable，不是 spring.flowable） ----------------
+flowable:
+  database-schema-update: true
+  async-executor-activate: false
+  # 自动部署 classpath:/processes/ 下的 *.bpmn20.xml
+  check-process-definitions: true
+  process-definition-location-prefix: classpath*:/processes/
+  process-definition-location-suffixes:
+    - '**.bpmn20.xml'
+  history-level: full
+
+logging:
+  level:
+    org.flowable: info
+    com.demo.leave: debug

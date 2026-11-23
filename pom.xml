@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+      ============================================================
+      Flowable 7 请假审批 Demo（业务与 activiti-leave-demo 完全一致）
+      技术栈：JDK 17+（实测 21 可跑）+ Spring Boot 3.2.5 + Flowable 7.0.1 + H2
+
+      为什么另外给一份：
+        · Activiti 7 社区版停在 7.1.0.M6（2020 年），只支持 JDK 8 / Spring Boot 2.x；
+        · 你机器默认 JDK 21，跑不了 Activiti 7，但 Flowable 7 可以；
+        · 两者同源（Flowable 由 Activiti 6 核心团队另立），API 名字几乎一样：
+          RepositoryService / RuntimeService / TaskService / HistoryService
+      ============================================================
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.demo</groupId>
+    <artifactId>flowable-leave-demo</artifactId>
+    <version>1.0.0</version>
+    <name>flowable-leave-demo</name>
+    <description>请假审批工作流 Demo（Flowable 7）</description>
+
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.flowable</groupId>
+            <artifactId>flowable-spring-boot-starter-process</artifactId>
+            <version>7.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <!-- 必须锁 2.1.214：H2 2.2 改了解析规则，Flowable 7.0.1 自带的建表脚本会报语法错误 -->
+            <version>2.1.214</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
